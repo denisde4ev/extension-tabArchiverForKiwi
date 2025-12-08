@@ -2,9 +2,3 @@ chrome.storage.local.get(['archivedTabs'], (result) => {
 	const tabs = result.archivedTabs || [];
 	document.body.textContent = JSON.stringify(tabs, null, 2);
 });
-
-chrome.runtime.onMessage.addListener((message) => {
-	if (message.type === 'error') {
-		alert(message.message);
-	}
-});

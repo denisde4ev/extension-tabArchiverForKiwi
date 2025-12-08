@@ -22,8 +22,8 @@ zip -r "$ZIP_FILE" $FILES
 
 # Generate private key if it doesn't exist
 if [ ! -f "$KEY_FILE" ]; then
-  echo "Generating private key..."
-  openssl genrsa -out "$KEY_FILE" 2048
+	echo "Generating private key..."
+	openssl genrsa -out "$KEY_FILE" 2048
 fi
 
 # Create CRX (v2 format)

@@ -9,6 +9,7 @@
 	"action": {
 		"default_title": "List Tabs"
 	},
+	"options_page": "options.html",
 	"background": {
 		"service_worker": "background.js"
 	}
