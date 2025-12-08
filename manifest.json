@@ -1,13 +1,14 @@
 {
 	"manifest_version": 3,
-	"name": "Tab Lister",
+	"name": "Tab Archiver",
+	"description": "Extension targeting Android Chromium (Kiwi) to archive tabs.",
 	"version": "1.0",
 	"permissions": [
 		"tabs",
 		"storage"
 	],
 	"action": {
-		"default_title": "List Tabs"
+		"default_title": "Archive Tabs"
 	},
 	"options_page": "options.html",
 	"background": {

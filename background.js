@@ -6,49 +6,55 @@ chrome.action.onClicked.addListener(async () => {
 		stopRequested = true;
 		return;
 	}
-	startArchiving();
+
+	await startArchiving();
 });
 
 async function startArchiving() {
-	isArchiving = true;
-	stopRequested = false;
+	try {
+		isArchiving = true;
+		stopRequested = false;
 
-	// 1. Reset storage and initialize local array
-	await chrome.storage.local.set({ archivedTabs: [] });
-	chrome.action.setBadgeText({ text: '0' });
-	let archivedTabs = [];
+		// 1. Reset storage and initialize local array
+		await chrome.storage.local.set({ archivedTabs: [] });
+		chrome.action.setBadgeText({ text: '0' });
+		let archivedTabs = [];
 
-	// 2. Close all tabs sequentially
-	while (true) {
-		if (stopRequested) break;
-		const currentTabs = await chrome.tabs.query({});
-		if (currentTabs.length === 0) break;
-
-		archivedTabs = [...archivedTabs, ...currentTabs];
-		await chrome.storage.local.set({ archivedTabs: archivedTabs });
-		chrome.action.setBadgeText({ text: archivedTabs.length.toString() });
-
-		for (const tab of currentTabs) {
+		// 2. Close all tabs sequentially
+		while (true) {
 			if (stopRequested) break;
-			try {
-				// Close tab
-				await chrome.tabs.remove(tab.id);
-			} catch (e) {
-				// Ignore errors if tab is already closed, but alert others
-				if (!e.message.includes('No tab with id')) {
-					chrome.runtime.sendMessage({ type: 'error', message: `Failed to close tab: ${tab.id} - ${e.message}` });
+			const currentTabs = await chrome.tabs.query({});
+			if (currentTabs.length === 0) break;
+
+			archivedTabs = [...archivedTabs, ...currentTabs];
+			await chrome.storage.local.set({ archivedTabs: archivedTabs });
+			chrome.action.setBadgeText({ text: archivedTabs.length.toString() });
+
+			for (const tab of currentTabs) {
+				if (stopRequested) break;
+				try {
+					// Close tab
+					await chrome.tabs.remove(tab.id);
+				} catch (e) {
+					// Ignore errors if tab is already closed, but alert others
+					if (!e.message.includes('No tab with id')) {
+						chrome.runtime.sendMessage({ type: 'error', message: `Failed to close tab: ${tab.id} - ${e.message}` });
+					}
 				}
+
+				// Wait for next page to load
+				await waitForPageLoad();
 			}
-
-			// Wait for next page to load
-			await waitForPageLoad();
 		}
-	}
 
-	// 3. Open Result Tab
-	chrome.tabs.create({ url: 'tabs.html' });
-	isArchiving = false;
-	chrome.action.setBadgeText({ text: archivedTabs.length.toString() + '.' });
+		// 3. Open Result Tab
+		chrome.tabs.create({ url: 'tabs.html' });
+		chrome.action.setBadgeText({ text: archivedTabs.length.toString() + '.' });
+	} catch (e) {
+		chrome.runtime.sendMessage({ type: 'error', message: `Failed to close tab: ${tab.id} - ${e.message}` });
+	} finally	{
+		isArchiving = false;
+	}
 }
 
 function waitForPageLoad() {
