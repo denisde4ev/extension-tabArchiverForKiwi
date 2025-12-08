@@ -1,14 +1,15 @@
 {
-"manifest_version": 3,
-"name": "Tab Lister",
-"version": "1.0",
-"permissions": [
-"tabs"
-],
-"action": {
-"default_title": "List Tabs"
-},
-"background": {
-"service_worker": "background.js"
-}
+	"manifest_version": 3,
+	"name": "Tab Lister",
+	"version": "1.0",
+	"permissions": [
+		"tabs",
+		"storage"
+	],
+	"action": {
+		"default_title": "List Tabs"
+	},
+	"background": {
+		"service_worker": "background.js"
+	}
 }
