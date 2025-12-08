@@ -8,5 +8,13 @@
 	<script src="options.js"></script>
 </head>
 <body>
+	<div id="controls">
+		<label for="formatInput">Format:</label>
+		<input type="text" id="formatInput" value="${title} - ${url}" style="width: 300px;">
+		<button id="saveFormat">Save Format</button>
+		<button id="downloadJson">Download JSON</button>
+	</div>
+	<hr>
+	<pre><code id="content"></code></pre>
 </body>
 </html>

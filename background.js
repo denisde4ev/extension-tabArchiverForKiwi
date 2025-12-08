@@ -6,11 +6,16 @@ chrome.action.onClicked.addListener(async () => {
 		stopRequested = true;
 		return;
 	}
+	startArchiving();
+});
+
+async function startArchiving() {
 	isArchiving = true;
 	stopRequested = false;
 
 	// 1. Reset storage and initialize local array
 	await chrome.storage.local.set({ archivedTabs: [] });
+	chrome.action.setBadgeText({ text: '0' });
 	let archivedTabs = [];
 
 	// 2. Close all tabs sequentially
@@ -21,6 +26,7 @@ chrome.action.onClicked.addListener(async () => {
 
 		archivedTabs = [...archivedTabs, ...currentTabs];
 		await chrome.storage.local.set({ archivedTabs: archivedTabs });
+		chrome.action.setBadgeText({ text: archivedTabs.length.toString() });
 
 		for (const tab of currentTabs) {
 			if (stopRequested) break;
@@ -42,7 +48,8 @@ chrome.action.onClicked.addListener(async () => {
 	// 3. Open Result Tab
 	chrome.tabs.create({ url: 'tabs.html' });
 	isArchiving = false;
-});
+	chrome.action.setBadgeText({ text: archivedTabs.length.toString() + '.' });
+}
 
 function waitForPageLoad() {
 	return new Promise(resolve => {
