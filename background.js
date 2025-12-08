@@ -1,21 +1,30 @@
+let isArchiving = false;
+let stopRequested = false;
+
 chrome.action.onClicked.addListener(async () => {
+	if (isArchiving) {
+		stopRequested = true;
+		return;
+	}
+	isArchiving = true;
+	stopRequested = false;
+
 	// 1. Reset storage and initialize local array
 	await chrome.storage.local.set({ archivedTabs: [] });
 	let archivedTabs = [];
 
 	// 2. Close all tabs sequentially
 	while (true) {
+		if (stopRequested) break;
 		const currentTabs = await chrome.tabs.query({});
 		if (currentTabs.length === 0) break;
 
+		archivedTabs = [...archivedTabs, ...currentTabs];
+		await chrome.storage.local.set({ archivedTabs: archivedTabs });
+
 		for (const tab of currentTabs) {
+			if (stopRequested) break;
 			try {
-				// Update local array
-				archivedTabs.push(tab);
-
-				// Save to storage (crash resilience)
-				await chrome.storage.local.set({ archivedTabs: archivedTabs });
-
 				// Close tab
 				await chrome.tabs.remove(tab.id);
 			} catch (e) {
@@ -25,11 +34,30 @@ chrome.action.onClicked.addListener(async () => {
 				}
 			}
 
-			// Wait as requested
-			await new Promise(resolve => setTimeout(resolve, 3e3)); // 3s
+			// Wait for next page to load
+			await waitForPageLoad();
 		}
 	}
 
 	// 3. Open Result Tab
 	chrome.tabs.create({ url: 'tabs.html' });
+	isArchiving = false;
 });
+
+function waitForPageLoad() {
+	return new Promise(resolve => {
+		const timeout = setTimeout(() => {
+			chrome.tabs.onUpdated.removeListener(listener);
+			resolve();
+		}, 5e3); // Fallback timeout
+
+		const listener = (tabId, changeInfo) => {
+			if (changeInfo.status === 'complete') {
+				chrome.tabs.onUpdated.removeListener(listener);
+				clearTimeout(timeout);
+				resolve();
+			}
+		};
+		chrome.tabs.onUpdated.addListener(listener);
+	});
+}
